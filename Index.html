@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     
@@ -187,17 +188,17 @@
             </div>
         </div>
     </div>
-</body>
-</html>
+
 <script>
 // تهيئة Firebase
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC5RYK1lGaJaMQJmOH85cqNgv6m7rbLS_A",
+  authDomain: "ramadanmotaz-5570f.firebaseapp.com",
+  projectId: "ramadanmotaz-5570f",
+  storageBucket: "ramadanmotaz-5570f.firebasestorage.app",
+  messagingSenderId: "595667154066",
+  appId: "1:595667154066:web:80ba616566ec55a5efe24b",
+  measurementId: "G-WLVRQVRGHT"
 };
 
 // تهيئة Firebase
@@ -207,6 +208,7 @@ try {
         firebase.initializeApp(firebaseConfig);
     }
     db = firebase.firestore();
+    firebase.analytics();
 } catch (error) {
     console.error('Error initializing Firebase:', error);
 }
@@ -264,6 +266,35 @@ function generateDeviceId() {
     const language = navigator.language;
     const deviceInfo = `${userAgent}|${screenRes}|${timezone}|${language}`;
     return CryptoJS.SHA256(deviceInfo).toString();
+}
+
+// عرض وقت المسابقة القادمة
+function showNextQuizTime() {
+    const now = new Date();
+    const nextQuiz = new Date();
+    nextQuiz.setHours(19, 0, 0, 0);
+    
+    if (now.getHours() >= 20) {
+        nextQuiz.setDate(nextQuiz.getDate() + 1);
+    }
+    
+    const timeUntilNextQuiz = nextQuiz - now;
+    const hours = Math.floor(timeUntilNextQuiz / (1000 * 60 * 60));
+    const minutes = Math.floor((timeUntilNextQuiz % (1000 * 60 * 60)) / (1000 * 60));
+    
+    document.getElementById('next-quiz-time').textContent = 
+        `المسابقة القادمة بعد ${hours} ساعة و ${minutes} دقيقة`;
+}
+
+// عرض وقت المشاركة القادمة
+function showParticipationMessage(nextTime) {
+    const now = new Date();
+    const timeUntilNext = nextTime - now;
+    const hours = Math.floor(timeUntilNext / (1000 * 60 * 60));
+    const minutes = Math.floor((timeUntilNext % (1000 * 60 * 60)) / (1000 * 60));
+    
+    document.getElementById('next-participation-time').textContent = 
+        `يمكنك المشاركة مجدداً بعد ${hours} ساعة و ${minutes} دقيقة`;
 }
 
 // التحقق من المشاركة السابقة
@@ -528,6 +559,8 @@ async function startQuiz() {
         const participation = await checkPreviousParticipation();
         
         if (participation.hasParticipated) {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('already-participated-screen').classList.remove('hidden');
             showParticipationMessage(participation.nextAllowedTime);
             return;
         }
@@ -600,3 +633,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
+</body>
+</html>
