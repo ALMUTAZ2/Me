@@ -16,30 +16,139 @@
             font-family: 'Cairo', sans-serif;
         }
 
-        /* نفس الأنماط CSS السابقة */
-        [Previous CSS styles...]
+        .quiz-button {
+            @apply bg-blue-600 text-white font-bold py-2 px-4 rounded-lg 
+                   hover:bg-blue-700 transition-colors duration-200 
+                   disabled:bg-gray-400 disabled:cursor-not-allowed;
+        }
+
+        .quiz-input {
+            @apply bg-white/10 text-white border border-white/20 rounded-lg 
+                   px-4 py-2 focus:outline-none focus:border-blue-500;
+        }
+
+        .answer-button {
+            @apply bg-white/10 text-white border border-white/20 rounded-lg 
+                   px-4 py-3 hover:bg-white/20 transition-colors duration-200 
+                   w-full text-right mb-2;
+        }
+
+        .correct {
+            @apply bg-green-500 border-green-600 hover:bg-green-600;
+        }
+
+        .incorrect {
+            @apply bg-red-500 border-red-600 hover:bg-red-600;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-b from-blue-900 to-indigo-950 min-h-screen">
-    <!-- نفس هيكل HTML السابق -->
-    [Previous HTML structure...]
+    <div class="container mx-auto px-4 py-8 max-w-2xl">
+        <!-- شاشة البداية -->
+        <div id="startScreen" class="text-center text-white">
+            <h1 class="text-4xl font-bold mb-8">فوازير رمضان 1446</h1>
+            <div class="space-y-4">
+                <input type="text" id="playerNameInput" 
+                       placeholder="أدخل اسمك" 
+                       class="quiz-input w-full mb-4">
+                <button id="startButton" 
+                        disabled 
+                        class="quiz-button w-full">
+                    ابدأ المسابقة
+                </button>
+            </div>
+        </div>
+
+        <!-- شاشة المشاركة السابقة -->
+        <div id="alreadyParticipatedScreen" class="hidden text-center text-white">
+            <h2 class="text-2xl font-bold mb-4">عذراً!</h2>
+            <p>لقد شاركت مسبقاً اليوم. يمكنك المشاركة مرة أخرى غداً.</p>
+        </div>
+
+        <!-- شاشة خارج وقت المسابقة -->
+        <div id="outOfTimeScreen" class="hidden text-center text-white">
+            <h2 class="text-2xl font-bold mb-4">المسابقة غير متاحة حالياً</h2>
+            <p>المسابقة متاحة من الساعة 7 مساءً حتى 8 مساءً</p>
+        </div>
+
+        <!-- شاشة اللعب -->
+        <div id="gameScreen" class="hidden text-white">
+            <h2 id="playerWelcome" class="text-2xl font-bold mb-4"></h2>
+            <div class="bg-white/10 rounded-lg p-6 mb-4">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="questionNumber" class="text-lg">السؤال 1/10</span>
+                    <span id="timer" class="text-lg">10</span>
+                </div>
+                <p id="questionText" class="text-xl mb-4"></p>
+                <div id="answerButtons" class="space-y-2"></div>
+            </div>
+            <div id="scoreDisplay" class="text-xl text-center"></div>
+        </div>
+
+        <!-- شاشة النتيجة النهائية -->
+        <div id="resultScreen" class="hidden text-center text-white">
+            <h2 class="text-2xl font-bold mb-4">انتهت المسابقة!</h2>
+            <p id="finalScore" class="text-xl mb-4"></p>
+            <p id="timeStats" class="mb-4"></p>
+        </div>
+    </div>
 
     <script>
         // تكوين Firebase
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyC5RYK1lGaJaMQJmOH85cqNgv6m7rbLS_A",
+            authDomain: "ramadanmotaz-5570f.firebaseapp.com",
+            projectId: "ramadanmotaz-5570f",
+            storageBucket: "ramadanmotaz-5570f.firebasestorage.app",
+            messagingSenderId: "595667154066",
+            appId: "1:595667154066:web:80ba616566ec55a5efe24b",
+            measurementId: "G-WLVRQVRGHT"
+        };
+
+        // بنك الأسئلة
+        const questionBank = [
+            {
+                question: "ما هي أول سورة نزلت في القرآن الكريم؟",
+                options: ["الفاتحة", "العلق", "البقرة", "الناس"],
+                correctAnswer: 1
+            },
+            {
+                question: "كم عدد ركعات صلاة التراويح؟",
+                options: ["8 ركعات", "20 ركعة", "12 ركعة", "6 ركعات"],
+                correctAnswer: 1
+            },
+            {
+                question: "في أي ليلة من رمضان تُرجى ليلة القدر؟",
+                options: ["ليلة 27", "ليلة 21", "ليلة 23", "كل الليالي الفردية في العشر الأواخر"],
+                correctAnswer: 3
+            },
+            // أضف المزيد من الأسئلة هنا
+        ];
+
+        // تعريف عناصر الصفحة
+        const elements = {
+            startScreen: document.getElementById('startScreen'),
+            playerNameInput: document.getElementById('playerNameInput'),
+            startButton: document.getElementById('startButton'),
+            alreadyParticipatedScreen: document.getElementById('alreadyParticipatedScreen'),
+            outOfTimeScreen: document.getElementById('outOfTimeScreen'),
+            gameScreen: document.getElementById('gameScreen'),
+            playerWelcome: document.getElementById('playerWelcome'),
+            questionNumber: document.getElementById('questionNumber'),
+            questionText: document.getElementById('questionText'),
+            answerButtons: document.getElementById('answerButtons'),
+            timer: document.getElementById('timer'),
+            scoreDisplay: document.getElementById('scoreDisplay'),
+            resultScreen: document.getElementById('resultScreen'),
+            finalScore: document.getElementById('finalScore'),
+            timeStats: document.getElementById('timeStats')
         };
 
         // نظام التخزين المؤقت للـ IP
         const ipCache = {
             value: null,
             timestamp: null,
-            TTL: 5 * 60 * 1000 // 5 دقائق
+            TTL: 5 * 60 * 1000
         };
 
         // نظام معالجة الأخطاء
@@ -64,6 +173,33 @@
                     this.retryCount = 0;
                 }
             }
+        };
+
+        // تهيئة Firebase
+        let db;
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            db = firebase.firestore();
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Error initializing Firebase:', error);
+        }
+
+        // حالة اللعبة
+        const gameState = {
+            playerName: "",
+            currentQuestion: 0,
+            score: 0,
+            answers: [],
+            timeLeft: 10,
+            timer: null,
+            questions: [],
+            questionStartTime: null,
+            questionTimes: [],
+            totalTime: 0,
+            isAnswered: false
         };
 
         // الحصول على IP المستخدم
@@ -120,38 +256,122 @@
             }
         }
 
-        // تهيئة Firebase
-        let db;
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            db = firebase.firestore();
-            console.log('Firebase initialized successfully');
-        } catch (error) {
-            console.error('Error initializing Firebase:', error);
-        }
-
-        // حالة اللعبة
-        const gameState = {
-            playerName: "",
-            currentQuestion: 0,
-            score: 0,
-            answers: [],
-            timeLeft: 10,
-            timer: null,
-            questions: [],
-            questionStartTime: null,
-            questionTimes: [],
-            totalTime: 0,
-            isAnswered: false
-        };
-
         // التحقق من وقت المسابقة
         function checkQuizTime() {
             const now = new Date();
             const hours = now.getHours();
-            return hours >= 19 && hours < 20; // 7 PM to 8 PM
+            return hours >= 19 && hours < 20;
+        }
+
+        // عرض السؤال
+        function displayQuestion() {
+            const question = gameState.questions[gameState.currentQuestion];
+            elements.questionNumber.textContent = `السؤال ${gameState.currentQuestion + 1}/${gameState.questions.length}`;
+            elements.questionText.textContent = question.question;
+            
+            elements.answerButtons.innerHTML = '';
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.className = 'answer-button';
+                button.onclick = () => checkAnswer(index);
+                elements.answerButtons.appendChild(button);
+            });
+
+            startTimer();
+        }
+
+        // التحقق من الإجابة
+        function checkAnswer(selectedIndex) {
+            if (gameState.isAnswered) return;
+            
+            gameState.isAnswered = true;
+            clearInterval(gameState.timer);
+            
+            const question = gameState.questions[gameState.currentQuestion];
+            const buttons = elements.answerButtons.children;
+            
+            // حساب الوقت المستغرق للإجابة
+            const endTime = Date.now();
+            const timeSpent = (endTime - gameState.questionStartTime) / 1000;
+            gameState.questionTimes.push(timeSpent);
+            
+            // تحديث الأزرار
+            buttons[selectedIndex].classList.add(
+                selectedIndex === question.correctAnswer ? 'correct' : 'incorrect'
+            );
+            
+            if (selectedIndex === question.correctAnswer) {
+                gameState.score++;
+            }
+            
+            // الانتقال للسؤال التالي بعد ثانية
+            setTimeout(nextQuestion, 1000);
+        }
+
+        // الانتقال للسؤال التالي
+        function nextQuestion() {
+            gameState.currentQuestion++;
+            gameState.isAnswered = false;
+            
+            if (gameState.currentQuestion < gameState.questions.length) {
+                displayQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // عرض النتائج
+        function showResults() {
+            elements.gameScreen.classList.add('hidden');
+            elements.resultScreen.classList.remove('hidden');
+            
+            const totalTime = gameState.questionTimes.reduce((a, b) => a + b, 0);
+            const avgTime = totalTime / gameState.questions.length;
+            
+            elements.finalScore.textContent = 
+                `النتيجة النهائية: ${gameState.score} من ${gameState.questions.length}`;
+            elements.timeStats.textContent = 
+                `متوسط وقت الإجابة: ${avgTime.toFixed(2)} ثانية`;
+            
+            // تسجيل النتيجة في Firebase
+            saveScore();
+        }
+
+        // حفظ النتيجة
+        async function saveScore() {
+            try {
+                const userIP = await getUserIP();
+                await db.collection('scores').add({
+                    playerName: gameState.playerName,
+                    score: gameState.score,
+                    totalTime: gameState.questionTimes.reduce((a, b) => a + b, 0),
+                    date: new Date().toISOString(),
+                    ip: userIP
+                });
+            } catch (error) {
+                console.error('Error saving score:', error);
+            }
+        }
+
+        // بدء المؤقت
+        function startTimer() {
+            gameState.timeLeft = 10;
+            gameState.questionStartTime = Date.now();
+            elements.timer.textContent = gameState.timeLeft;
+            
+            clearInterval(gameState.timer);
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                elements.timer.textContent = gameState.timeLeft;
+                
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timer);
+                    if (!gameState.isAnswered) {
+                        checkAnswer(-1); // تمرير -1 للإشارة إلى عدم اختيار إجابة
+                    }
+                }
+            }, 1000);
         }
 
         // بدء المسابقة
@@ -176,9 +396,10 @@
                 gameState.questions = [...questionBank];
                 
                 elements.startScreen.classList.add('hidden');
+                elements.gameScreen.classList.remove('hidden');
                 elements.playerWelcome.textContent = `مرحباً ${gameState.playerName}!`;
                 
-                startCountdown();
+                displayQuestion();
             } catch (error) {
                 console.error('Error starting quiz:', error);
                 alert('حدث خطأ في بدء المسابقة. يرجى المحاولة مرة أخرى.');
@@ -188,7 +409,6 @@
         // تهيئة المسابقة
         async function initializeQuiz() {
             try {
-                updateDateTime();
                 const isQuizTime = checkQuizTime();
                 
                 if (!isQuizTime) {
@@ -215,9 +435,7 @@
             }
         }
 
-        // [باقي الوظائف الأصلية تبقى كما هي]
-
-        // مستمعي الأحداث
+        // مستمعو الأحداث
         document.addEventListener('DOMContentLoaded', function() {
             try {
                 lucide.createIcons();
